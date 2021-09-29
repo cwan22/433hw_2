@@ -1,0 +1,66 @@
+---
+title: "README"
+author: "Annabelle Wan"
+date: "9/28/2021"
+output: github_document
+---
+
+```{r}
+library(dplyr)
+library(nycflights13)
+library(ggplot2)
+```
+
+
+```{r}
+#1
+#1)
+sum(is.na(flights$dep_time)) # 8255 flights have a missing dep_time.
+#2)
+filter(flights, is.na(dep_time)) 
+# For the flights that miss dep_time variable, they also miss dep_delay, arr_time, arr_delay, air_time. 
+#3)
+# These rows with missing dep_time variable represent that the flights are cancelled.
+```
+
+```{r}
+#2
+flights %>% select(dep_time, sched_dep_time)
+
+flights %>%
+  mutate(dep_minutes_since_midnight=(dep_time %/% 100)*60 +(dep_time %% 100),
+         sched_minutes_since_midnight=(sched_dep_time %/% 100)*60 +(sched_dep_time %% 100)) %>% 
+  select(dep_minutes_since_midnight, sched_minutes_since_midnight)
+```
+
+
+```{r}
+#3
+#the number of canceled flights per day
+cancel_flights_per_day <- flights %>%
+     group_by(month, day) %>% 
+     summarize(sum(is.na(dep_delay)))
+cancel_flights_per_day
+```
+
+```{r}
+# relationship between the proportion of canceled flights and the average dep_delay
+flights %>%
+  group_by(month, day) %>% 
+  summarize(avr_dep_delay=mean(dep_delay, na.rm=TRUE),
+            prop_cancel_dep=sum(is.na(dep_delay))/n()) %>% 
+  ggplot(mapping=aes(x=avr_dep_delay ,y=prop_cancel_dep)) + geom_point()
+# There is a positive relationship between the average dep_delay and the proportion of cancelled flights. In other words, if the average dep_delay in a specific day is large, then there is a high chance that more cancelled flights happen during that day.
+```
+```{r}
+# relationship between the proportion of canceled flights and the average arr_delay
+flights %>%
+  group_by(month, day) %>% 
+  summarize(avr_arr_delay=mean(arr_delay, na.rm=TRUE),
+            prop_cancel_arr=sum(is.na(arr_delay))/n()) %>% 
+  ggplot(mapping=aes(x=avr_arr_delay ,y=prop_cancel_arr)) + geom_point()
+# There is a positive relationship between the average arr_delay and the proportion of cancelled flights. In other words, if the average arr_delay in a specific day is large, then there is a high chance that more cancelled flights happen during that day.
+```
+
+
+
